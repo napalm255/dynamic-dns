@@ -21,6 +21,7 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSSMReadOnlyAccess
+        - AmazonRoute53FullAccess
       Events:
         PostEvent:
           Type: Api
