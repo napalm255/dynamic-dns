@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Commute SNS to Database."""
+"""Dynamic DNS."""
 # pylint: disable=broad-except
 
 from __future__ import print_function
