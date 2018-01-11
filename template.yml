@@ -8,6 +8,12 @@ Parameters:
   ProjectId:
     Type: String
     Description: CodeStar projectId used to associate new resources to team members
+  /ddns/api/host:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: Api Gateway Host
+  /ddns/api/basepath:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: Api Gateway Base Path
 
 Resources:
   DynamicDns:
@@ -28,3 +34,29 @@ Resources:
           Properties:
             Path: /
             Method: post
+            RestApiId: !Ref DynamicDnsApi
+
+  DynamicDnsApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "1.0"
+          title: "awscodestar-ddns-lambda"
+        host: !Ref /ddns/api/host
+        basePath: !Ref /ddns/api/basepath
+        schemes:
+          - "https"
+        paths:
+          /:
+            post:
+              responses: {}
+              security:
+                - api_key: []
+        securityDefinitions:
+          api_key:
+            type: "apiKey"
+            name: "x-api-key"
+            in: "header"
