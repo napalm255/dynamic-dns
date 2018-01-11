@@ -171,7 +171,7 @@ def handler(event, context):
 
     # authorize record update
     try:
-        assert authorize(data['name'], headers['xapikey_header'])
+        assert authorize(data['name'], headers['x-api-key'])
     except AssertionError:
         return error('unauthorized')
     except Exception as ex:
@@ -180,7 +180,7 @@ def handler(event, context):
 
     # update record
     try:
-        response = update(data['name'], addy, headers['xapikey_header'])
+        response = update(data['name'], addy, headers['x-api-key'])
         logging.debug('update: %s', response)
     except Exception as ex:
         message = 'unexpected error updating record: %s' % ex
@@ -192,7 +192,7 @@ def handler(event, context):
 
 
 if __name__ == '__main__':
-    print(handler({'headers': {'XAPIKEY_HEADER': 'abcdef0987654321',
+    print(handler({'headers': {'x-api-key': 'abcdef0987654321',
                                'Content-Type': 'application/x-www-form-urlencoded',
                                'Origin': '6.9.6.9'},
                    'body': 'name=test'}, None))
