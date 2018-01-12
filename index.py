@@ -13,7 +13,7 @@ import boto3
 
 
 # logging configuration
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 try:
     SSM = boto3.client('ssm')
@@ -188,9 +188,13 @@ def handler(event, context):
         message = 'unexpected error updating record: %s' % ex
         return error(message)
 
-    return {'statusCode': 200,
-            'body': json.dumps({'status': 'OK'}),
-            'headers': header}
+    output = {'statusCode': 200,
+              'body': json.dumps({'status': 'OK',
+                                  'name': data['name'],
+                                  'ip': addy}),
+              'headers': header}
+    logging.info(output)
+    return output
 
 
 if __name__ == '__main__':
