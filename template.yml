@@ -79,7 +79,8 @@ Resources:
     Properties:
       UsagePlanName: ddns
       ApiStages:
-        - Prod
+        - ApiId: !Ref DynamicDnsApi
+          Stage: Prod
       Description: Dynamic DNS Usage Plan
       Quota:
         Limit: 500
