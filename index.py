@@ -64,11 +64,10 @@ def reserved(record):
     return False
 
 
-def update(record, addy, auth):
+def update(record, addy, auth, timestamp):
     """Update route 53 record."""
     record = '%s.%s' % (record, CONFIG['domain'])
     token = hashlib.sha256(bytearray(auth, 'utf-8')).hexdigest()
-    timestamp = datetime.utcnow().isoformat()
     response = R53.change_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
         ChangeBatch={
@@ -181,8 +180,9 @@ def handler(event, context):
         return error(message)
 
     # update record
+    timestamp = datetime.utcnow().isoformat()
     try:
-        response = update(data['name'], addy, headers['x-api-key'])
+        response = update(data['name'], addy, headers['x-api-key'], timestamp)
         logging.debug('update: %s', response)
     except Exception as ex:
         message = 'unexpected error updating record: %s' % ex
@@ -191,7 +191,8 @@ def handler(event, context):
     output = {'statusCode': 200,
               'body': json.dumps({'status': 'OK',
                                   'name': data['name'],
-                                  'ip': addy}),
+                                  'ip': addy,
+                                  'ts': timestamp}),
               'headers': header}
     logging.info(output)
     return output
