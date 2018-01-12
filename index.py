@@ -154,7 +154,7 @@ def handler(event, context):
         if 'ip' in data:
             addy = data['ip']
         else:
-            addy = headers['origin']
+            addy = headers['identity']['sourceIp']
         logging.debug('ip address: %s', addy)
     except KeyError as ex:
         message = 'invalid ip address: %s' % ex
