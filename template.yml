@@ -8,11 +8,11 @@ Parameters:
   ProjectId:
     Type: String
     Description: CodeStar projectId used to associate new resources to team members
-  /ddns/api/host:
-    Type: 'AWS::SSM::Parameter::Value<String>'
+  apiHost:
+    Type: String
     Description: Api Gateway Host
-  /ddns/api/basepath:
-    Type: 'AWS::SSM::Parameter::Value<String>'
+  apiBasePath:
+    Type: String
     Description: Api Gateway Base Path
 
 Resources:
@@ -45,8 +45,8 @@ Resources:
         info:
           version: "1.0"
           title: "awscodestar-ddns-lambda"
-        host: !Ref /ddns/api/host
-        basePath: !Ref /ddns/api/basepath
+        host: !Ref apiHost
+        basePath: !Ref apiBasePath
         schemes:
           - "https"
         paths:
