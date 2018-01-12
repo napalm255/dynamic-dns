@@ -6,6 +6,7 @@ from __future__ import print_function
 import sys
 import logging
 import json
+from datetime import datetime
 import hashlib
 from urllib.parse import parse_qsl
 import boto3
@@ -67,6 +68,7 @@ def update(record, addy, auth):
     """Update route 53 record."""
     record = '%s.%s' % (record, CONFIG['domain'])
     token = hashlib.sha256(bytearray(auth, 'utf-8')).hexdigest()
+    timestamp = datetime.utcnow().isoformat()
     response = R53.change_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
         ChangeBatch={
@@ -80,7 +82,7 @@ def update(record, addy, auth):
                         'TTL': 30,
                         'ResourceRecords': [
                             {
-                                'Value': '"%s"' % (token)
+                                'Value': '"id=%s;ts=%s"' % (token, timestamp)
                             }
                         ]
                     }
