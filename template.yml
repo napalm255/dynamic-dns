@@ -44,9 +44,9 @@ Resources:
         swagger: "2.0"
         info:
           version: "1.0"
-          title: "awscodestar-ddns-lambda"
+          title: awscodestar-ddns-lambda
         host: !Ref apiHost
-        basePath: !Ref apiBasePath
+        basePath: !Sub "/${apiBasePath}"
         schemes:
           - "https"
         paths:
@@ -73,3 +73,17 @@ Resources:
       DomainName: !Ref apiHost
       RestApiId: !Ref DynamicDnsApi
       Stage: Prod
+
+  DynamicDnsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: ddns
+      ApiStages:
+        - Prod
+      Description: Dynamic DNS Usage Plan
+      Quota:
+        Limit: 500
+        Period: DAY
+      Throttle:
+        BurstLimit: 20
+        RateLimit: 10
