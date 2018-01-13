@@ -165,19 +165,23 @@ def handler(event, context):
         assert ctype in headers['content-type'].lower(), 'invalid content-type'
         data = dict(parse_qsl(event['body']))
         # validate name
-        assert 'name' in data
+        assert 'name' in data, 'no name provided'
         assert not reserved(data['name']), 'name is reserved'
         # validate ip
+        assert 'requestContext' in event, 'event error'
+        assert 'identity' in event['requestContext'], 'event error'
+        assert 'sourceIp' in event['requestContext']['identity'], 'no source ip'
+        addy = event['requestContext']['identity']['sourceIp']
+        assert ip_address(addy), 'invalid source ip address'
+        # check ip override
         if 'ip' in data:
             addy = data['ip']
-        else:
-            addy = event['requestContext']['identity']['sourceIp']
-        assert ip_address(addy), 'invalid ip address'
+            assert ip_address(addy), 'invalid override ip address'
     except ValueError as ex:
         return error(str(ex))
     except AssertionError as ex:
         return error(str(ex))
-    except KeyError:
+    except Exception:
         return error('unexpected error loading data')
 
     # authorize and update
@@ -204,9 +208,10 @@ def handler(event, context):
 
 if __name__ == '__main__':
     KEY = sys.argv[1]
-    NAME = sys.argv[2]
-    ADDY = sys.argv[3]
+    BODY = sys.argv[2]
+    print(BODY)
     print(handler({'headers': {'x-api-key': KEY,
                                'Content-Type':
                                'application/x-www-form-urlencoded'},
-                   'body': 'name=%s&ip=%s' % (NAME, ADDY)}, None))
+                   'requestContext': {'identity': {'sourceIp': '6.9.6.9'}},
+                   'body': BODY}, None))
