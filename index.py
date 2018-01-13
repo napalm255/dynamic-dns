@@ -7,6 +7,7 @@ import sys
 import logging
 import json
 from datetime import datetime
+from ipaddress import ip_address
 import hashlib
 from urllib.parse import parse_qsl
 import boto3
@@ -19,8 +20,7 @@ try:
     SSM = boto3.client('ssm')
 
     PREFIX = '/ddns/config'
-    PARAMS = SSM.get_parameters_by_path(Path=PREFIX, Recursive=True,
-                                        WithDecryption=True)
+    PARAMS = SSM.get_parameters_by_path(Path=PREFIX, Recursive=True, WithDecryption=True)
     logging.debug('ssm: parameters (%s)', PARAMS)
 
     CONFIG = dict()
@@ -28,30 +28,50 @@ try:
         key = param['Name'].replace('%s/' % PREFIX, '')
         CONFIG.update({key: param['Value']})
     logging.debug('ssm: config (%s)', CONFIG)
-
     logging.info('ssm: successfully gathered parameters')
 except Exception as ex:
-    logging.error('ssm: could not connect to SSM. (%s)', ex)
+    logging.error('ssm: could not connect. (%s)', ex)
     sys.exit()
 
 try:
     R53 = boto3.client('route53')
 except Exception as ex:
-    logging.error('r53: could not connect to R53. (%s)', ex)
+    logging.error('r53: could not connect. (%s)', ex)
+    sys.exit()
+
+try:
+    API = boto3.client('apigateway')
+except Exception as ex:
+    logging.error('apigateway: could not connect. (%s)', ex)
     sys.exit()
 
 
-def error(message, header=None, code=403):
+def header():
+    """Return header object."""
+    return {'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'}
+
+
+def error(message, code=403):
     """Return error object."""
-    logging.info('handler: error')
-    if not header:
-        header = {'Content-Type': 'application/json',
-                  'Access-Control-Allow-Origin': '*'}
-    logging.error('%s (%s)', message, header)
     return {'statusCode': code,
             'body': json.dumps({'status': 'ERROR',
                                 'message': message}),
-            'headers': header}
+            'headers': header()}
+
+
+def customer(apikey):
+    """Get customer data from api key."""
+    token = None
+    paginator = API.get_paginator('get_api_keys')
+    response = paginator.paginate(includeValues=True,
+                                  PaginationConfig={'PageSize': 10})
+    for res in response:
+        for item in res['items']:
+            if item['value'] == apikey:
+                data = '|'.join([item['name'], item['id']])
+                token = hashlib.sha256(bytearray(data, 'utf-8')).hexdigest()
+    return token
 
 
 def reserved(record):
@@ -64,10 +84,9 @@ def reserved(record):
     return False
 
 
-def update(record, addy, auth, timestamp):
+def update(record, addy, token, timestamp):
     """Update route 53 record."""
     record = '%s.%s' % (record, CONFIG['domain'])
-    token = hashlib.sha256(bytearray(auth, 'utf-8')).hexdigest()
     response = R53.change_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
         ChangeBatch={
@@ -102,13 +121,13 @@ def update(record, addy, auth, timestamp):
             ]
         }
     )
+    logging.debug('update: %s', response)
     return response
 
 
-def authorize(record, auth):
+def authorize(record, token):
     """Authorize route 53 record access."""
     record = '%s.%s' % (record, CONFIG['domain'])
-    token = hashlib.sha256(bytearray(auth, 'utf-8')).hexdigest()
     response = R53.list_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
         StartRecordName=record,
@@ -133,73 +152,61 @@ def authorize(record, auth):
 
 def handler(event, context):
     """Lambda handler."""
-    # pylint: disable=unused-argument, too-many-locals, too-many-return-statements
+    # pylint: disable=unused-argument
     logging.info(event)
-
-    header = {'Content-Type': 'application/json'}
 
     # read event headers
     headers = dict((k.lower(), v) for k, v in event['headers'].items())
 
     # load data
     try:
-        assert 'application/x-www-form-urlencoded' in headers['content-type'].lower()
+        # content-type
+        ctype = 'application/x-www-form-urlencoded'
+        assert ctype in headers['content-type'].lower(), 'invalid content-type'
         data = dict(parse_qsl(event['body']))
-        logging.debug('data (%s)', data)
-    except AssertionError:
-        message = 'invalid content-type: %s' % headers['content-type'].lower()
-        return error(message, header)
-
-    # selected ip address
-    try:
+        # validate name
+        assert 'name' in data
+        assert not reserved(data['name']), 'name is reserved'
+        # validate ip
         if 'ip' in data:
             addy = data['ip']
         else:
             addy = event['requestContext']['identity']['sourceIp']
-        logging.debug('ip address: %s', addy)
-    except KeyError as ex:
-        message = 'invalid ip address: %s' % ex
-        return error(message)
+        assert ip_address(addy), 'invalid ip address'
+    except ValueError as ex:
+        return error(str(ex))
+    except AssertionError as ex:
+        return error(str(ex))
+    except KeyError:
+        return error('unexpected error loading data')
 
-    # check if record name is reserved
+    # authorize and update
     try:
-        assert not reserved(data['name'])
-    except AssertionError:
-        return error('name is reserved')
-    except Exception as ex:
-        message = 'unexpected error checking name reservations: %s' % ex
-        return error(message)
-
-    # authorize record update
-    try:
-        assert authorize(data['name'], headers['x-api-key'])
-    except AssertionError:
-        return error('unauthorized')
-    except Exception as ex:
-        message = 'unexpected error authorizing record: %s' % ex
-        return error(message)
-
-    # update record
-    timestamp = datetime.utcnow().isoformat()
-    try:
-        response = update(data['name'], addy, headers['x-api-key'], timestamp)
-        logging.debug('update: %s', response)
-    except Exception as ex:
-        message = 'unexpected error updating record: %s' % ex
-        return error(message)
+        timestamp = datetime.utcnow().isoformat()
+        token = customer(headers['x-api-key'])
+        assert token is not None, 'invalid token'
+        assert authorize(data['name'], token), 'unauthorized'
+        assert update(data['name'], addy, token, timestamp), 'update failed'
+    except AssertionError as ex:
+        return error(str(ex))
+    except Exception:
+        return error('unexpected error')
 
     output = {'statusCode': 200,
               'body': json.dumps({'status': 'OK',
                                   'name': data['name'],
                                   'ip': addy,
                                   'ts': timestamp}),
-              'headers': header}
+              'headers': header()}
     logging.info(output)
     return output
 
 
 if __name__ == '__main__':
-    print(handler({'headers': {'x-api-key': 'abcdef0987654321',
-                               'Content-Type': 'application/x-www-form-urlencoded',
-                               'Origin': '6.9.6.9'},
-                   'body': 'name=test'}, None))
+    KEY = sys.argv[1]
+    NAME = sys.argv[2]
+    ADDY = sys.argv[3]
+    print(handler({'headers': {'x-api-key': KEY,
+                               'Content-Type':
+                               'application/x-www-form-urlencoded'},
+                   'body': 'name=%s&ip=%s' % (NAME, ADDY)}, None))
