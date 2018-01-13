@@ -69,7 +69,7 @@ def customer(apikey):
     for res in response:
         for item in res['items']:
             if item['value'] == apikey:
-                data = '|'.join([item['name'], item['id']])
+                data = '|'.join([item['name'], item['description']])
                 token = hashlib.sha256(bytearray(data, 'utf-8')).hexdigest()
     return token
 
@@ -177,9 +177,7 @@ def handler(event, context):
         if 'ip' in data:
             addy = data['ip']
             assert ip_address(addy), 'invalid override ip address'
-    except ValueError as ex:
-        return error(str(ex))
-    except AssertionError as ex:
+    except (ValueError, AssertionError) as ex:
         return error(str(ex))
     except Exception:
         return error('unexpected error loading data')
