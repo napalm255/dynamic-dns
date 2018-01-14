@@ -66,6 +66,7 @@ Resources:
             type: "apiKey"
             name: "x-api-key"
             in: "header"
+    DependsOn: DynamicDnsLambda
 
   DynamicDnsMapping:
     Type: AWS::ApiGateway::BasePathMapping
