@@ -92,8 +92,8 @@ def reserved(record):
 
 def update(token, record, value, ttl=30):
     """Update route 53 record."""
+    status = False
     timestamp = datetime.utcnow().isoformat()
-    record = '%s.%s' % (record, CONFIG['domain'])
     response = R53.change_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
         ChangeBatch={
@@ -129,11 +129,14 @@ def update(token, record, value, ttl=30):
         }
     )
     logging.debug('update: %s', response)
-    return response
+    if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        status = True
+    return status
 
 
 def authorize(record, token):
     """Authorize route 53 record access."""
+    status = False
     record = '%s.%s' % (record, CONFIG['domain'])
     response = R53.list_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
@@ -150,11 +153,10 @@ def authorize(record, token):
 
     rectype = '%s|TXT' % (record)
     if rectype not in records:
-        return True
+        status = True
     if token in records[rectype]:
-        return True
-
-    return False
+        status = True
+    return status
 
 
 def handler(event, context):
@@ -193,9 +195,10 @@ def handler(event, context):
     # authorize and update
     try:
         token = customer(headers['x-api-key'])
+        record = '%s.%s' % (name, CONFIG['domain'])
         assert token is not None, 'invalid token'
         assert authorize(name, token), 'unauthorized'
-        assert update(token, name, addy), 'update failed'
+        assert update(token, record, addy), 'update failed'
     except AssertionError as ex:
         return error(str(ex))
     except Exception as ex:
