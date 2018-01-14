@@ -45,7 +45,7 @@ Resources:
     DependsOn: DynamicDnsApi
     Properties:
       Handle: !Ref DynamicDnsWaitConditionHandle
-      Timeout: 60
+      Timeout: 4500
 
   DynamicDnsApi:
     Type: AWS::Serverless::Api
