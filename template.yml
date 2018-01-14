@@ -23,11 +23,12 @@ Resources:
       Handler: index.handler
       Runtime: python3.6
       CodeUri: ./
-      Timeout: 30
+      Timeout: 15
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSSMReadOnlyAccess
         - AmazonRoute53FullAccess
+        - AmazonAPIGatewayAdministrator
       Events:
         PostEvent:
           Type: Api
