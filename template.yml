@@ -36,7 +36,6 @@ Resources:
             Path: /
             Method: post
             RestApiId: !Ref DynamicDnsApi
-    DependsOn: DynamicDnsApi
 
   DynamicDnsApi:
     Type: AWS::Serverless::Api
