@@ -16,6 +16,10 @@ Parameters:
     Description: Api Gateway Base Path
 
 Resources:
+  DynamicDnsWaitConditionHandle:
+    Type: AWS::CloudFormation::WaitHandle
+    Properties:
+
   DynamicDnsLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -36,6 +40,13 @@ Resources:
             Path: /
             Method: post
             RestApiId: !Ref DynamicDnsApi
+
+  DynamicDnsApiWaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: DynamicDnsApi
+    Properties:
+      Handle: !Ref DynamicDnsWaitConditionHandle
+      Timeout: 60
 
   DynamicDnsApi:
     Type: AWS::Serverless::Api
@@ -74,7 +85,7 @@ Resources:
       DomainName: !Ref apiHost
       RestApiId: !Ref DynamicDnsApi
       Stage: Prod
-    DependsOn: DynamicDnsApi
+    DependsOn: DynamicDnsApiWaitCondition
 
   DynamicDnsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
@@ -90,4 +101,4 @@ Resources:
       Throttle:
         BurstLimit: 20
         RateLimit: 10
-    DependsOn: DynamicDnsApi
+    DependsOn: DynamicDnsApiWaitCondition
