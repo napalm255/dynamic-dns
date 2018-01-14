@@ -18,7 +18,6 @@ Parameters:
 Resources:
   DynamicDnsWaitConditionHandle:
     Type: AWS::CloudFormation::WaitHandle
-    Properties:
 
   DynamicDnsLambda:
     Type: AWS::Serverless::Function
