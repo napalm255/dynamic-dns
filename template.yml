@@ -16,7 +16,7 @@ Parameters:
     Description: Api Gateway Base Path
 
 Resources:
-  DynamicDns:
+  DynamicDnsLambda:
     Type: AWS::Serverless::Function
     Properties:
       Description: Dynamic DNS
@@ -74,6 +74,7 @@ Resources:
       DomainName: !Ref apiHost
       RestApiId: !Ref DynamicDnsApi
       Stage: Prod
+    DependsOn: DynamicDnsApi
 
   DynamicDnsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
@@ -89,3 +90,4 @@ Resources:
       Throttle:
         BurstLimit: 20
         RateLimit: 10
+    DependsOn: DynamicDnsApi
