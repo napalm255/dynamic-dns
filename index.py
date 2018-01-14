@@ -54,10 +54,12 @@ def header():
 
 def error(message, code=403):
     """Return error object."""
-    return {'statusCode': code,
-            'body': json.dumps({'status': 'ERROR',
-                                'message': message}),
-            'headers': header()}
+    output = {'statusCode': code,
+              'body': json.dumps({'status': 'ERROR',
+                                  'message': message}),
+              'headers': header()}
+    logging.error(output)
+    return output
 
 
 def customer(apikey):
@@ -66,26 +68,31 @@ def customer(apikey):
     paginator = API.get_paginator('get_api_keys')
     response = paginator.paginate(includeValues=True,
                                   PaginationConfig={'PageSize': 10})
+    data = None
     for res in response:
         for item in res['items']:
             if item['value'] == apikey:
                 data = '|'.join([item['name'], item['description']])
                 token = hashlib.sha256(bytearray(data, 'utf-8')).hexdigest()
+    logging.debug('customer: %s (%s)', token, data)
     return token
 
 
 def reserved(record):
     """Exclude record names."""
+    response = False
     rsrv = list()
     if 'reserved' in CONFIG:
         rsrv = ','.split(CONFIG['reserved'])
     if record in rsrv:
-        return True
-    return False
+        response = True
+    logging.debug('reserved: %s', response)
+    return response
 
 
-def update(record, addy, token, timestamp):
+def update(token, record, value, ttl=30):
     """Update route 53 record."""
+    timestamp = datetime.utcnow().isoformat()
     record = '%s.%s' % (record, CONFIG['domain'])
     response = R53.change_resource_record_sets(
         HostedZoneId=CONFIG['hosted_zone_id'],
@@ -97,7 +104,7 @@ def update(record, addy, token, timestamp):
                     'ResourceRecordSet': {
                         'Name': record,
                         'Type': 'TXT',
-                        'TTL': 30,
+                        'TTL': ttl,
                         'ResourceRecords': [
                             {
                                 'Value': '"id=%s;ts=%s"' % (token, timestamp)
@@ -110,10 +117,10 @@ def update(record, addy, token, timestamp):
                     'ResourceRecordSet': {
                         'Name': record,
                         'Type': 'A',
-                        'TTL': 30,
+                        'TTL': ttl,
                         'ResourceRecords': [
                             {
-                                'Value': addy
+                                'Value': value
                             }
                         ]
                     }
@@ -144,10 +151,10 @@ def authorize(record, token):
     rectype = '%s|TXT' % (record)
     if rectype not in records:
         return True
-    if token not in records[rectype]:
-        return False
+    if token in records[rectype]:
+        return True
 
-    return True
+    return False
 
 
 def handler(event, context):
@@ -166,7 +173,8 @@ def handler(event, context):
         data = dict(parse_qsl(event['body']))
         # validate name
         assert 'name' in data, 'no name provided'
-        assert not reserved(data['name']), 'name is reserved'
+        name = data['name']
+        assert not reserved(name), 'name is reserved'
         # validate ip
         assert 'requestContext' in event, 'event error'
         assert 'identity' in event['requestContext'], 'event error'
@@ -179,26 +187,24 @@ def handler(event, context):
             assert ip_address(addy), 'invalid override ip address'
     except (ValueError, AssertionError) as ex:
         return error(str(ex))
-    except Exception:
-        return error('unexpected error loading data')
+    except Exception as ex:
+        return error('unexpected error loading data (%s)' % ex)
 
     # authorize and update
     try:
-        timestamp = datetime.utcnow().isoformat()
         token = customer(headers['x-api-key'])
         assert token is not None, 'invalid token'
-        assert authorize(data['name'], token), 'unauthorized'
-        assert update(data['name'], addy, token, timestamp), 'update failed'
+        assert authorize(name, token), 'unauthorized'
+        assert update(token, name, addy), 'update failed'
     except AssertionError as ex:
         return error(str(ex))
-    except Exception:
-        return error('unexpected error')
+    except Exception as ex:
+        return error('unexpected error updating (%s)' % ex)
 
     output = {'statusCode': 200,
               'body': json.dumps({'status': 'OK',
-                                  'name': data['name'],
-                                  'ip': addy,
-                                  'ts': timestamp}),
+                                  'name': name,
+                                  'ip': addy}),
               'headers': header()}
     logging.info(output)
     return output
