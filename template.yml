@@ -57,7 +57,7 @@ Resources:
               security:
                 - api_key: []
               x-amazon-apigateway-integration:
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DynamicDns.Arn}/invocations"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DynamicDnsLambda.Arn}/invocations"
                 passthroughBehavior: "when_no_match"
                 httpMethod: "POST"
                 type: "aws_proxy"
