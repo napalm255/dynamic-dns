@@ -32,13 +32,13 @@ Resources:
         - AmazonSSMReadOnlyAccess
         - AmazonRoute53FullAccess
         - AmazonAPIGatewayAdministrator
-      Events:
-        PostEvent:
-          Type: Api
-          Properties:
-            Path: /
-            Method: post
-            RestApiId: !Ref DynamicDnsApi
+          #      Events:
+          #        PostEvent:
+          #          Type: Api
+          #          Properties:
+          #            Path: /
+          #            Method: post
+          #            RestApiId: !Ref DynamicDnsApi
 
   DynamicDnsApiWaitCondition:
     Type: AWS::CloudFormation::WaitCondition
