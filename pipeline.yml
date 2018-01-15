@@ -322,9 +322,9 @@ Resources:
                 Capabilities: CAPABILITY_IAM
                 ChangeSetName: pipeline-changeset
                 ParameterOverrides: !Sub |
-                  '{"ProjectId": "${ProjectId}",
-                    "apiHost": "${apiHost}",
-                    "apiBasePath": "${apiBasePath}"}'
+                  {"ProjectId": "${ProjectId}",
+                   "apiHost": "${apiHost}",
+                   "apiBasePath": "${apiBasePath}"}
                 RoleArn: !GetAtt CloudFormationTrustRole.Arn
                 StackName: !Sub ${ProjectId}-lambda
                 TemplatePath: !Sub ${ProjectId}-BuildArtifact::template-export.yml
