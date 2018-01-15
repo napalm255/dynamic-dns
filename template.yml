@@ -144,6 +144,7 @@ Resources:
     DependsOn:
       - CodeBuildRole
     Properties:
+      PolicyName: !Sub ${ProjectId}-CodeBuildPolicy
       PolicyDocument:
         Statement:
           - Action:
@@ -167,7 +168,6 @@ Resources:
             Effect: Allow
             Resource:
               - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3
-      PolicyName: ${ProjectId}-CodeBuildPolicy
       Roles:
         - !Ref 'CodeBuildRole'
 
