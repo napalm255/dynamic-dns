@@ -116,7 +116,6 @@ Resources:
                 Effect: Allow
                 Resource:
                   - 'arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31'
-                  - 'arn:aws:cloudformation:us-east-1:aws:transform/CodeStar'
   LambdaTrustRole:
     Type: AWS::IAM::Role
     Description: Creating service role in IAM for AWS Lambda
