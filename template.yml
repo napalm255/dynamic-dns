@@ -350,16 +350,16 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
-              Effect: Allow
-              Principal:
-                AWS:
-                  - !GetAtt CodePipelineTrustRole.Arn
-                  - !GetAtt CodeBuildRole.Arn
-                  - !GetAtt CloudFormationTrustRole.Arn
-                Resource:
-                  - !Sub arn:aws:s3:::${S3Bucket}
-                  - !Sub arn:aws:s3:::${S3Bucket}/*
-                Sid: WhitelistedGet
+            Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt CodePipelineTrustRole.Arn
+                - !GetAtt CodeBuildRole.Arn
+                - !GetAtt CloudFormationTrustRole.Arn
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+            Sid: WhitelistedGet
           - Action:
               - 's3:PutObject'
             Effect: Allow
@@ -367,10 +367,10 @@ Resources:
               AWS:
                 - !GetAtt CodePipelineTrustRole.Arn
                 - !GetAtt CodeBuildRole.Arn
-              Resource:
-                - !Sub arn:aws:s3:::${S3Bucket}
-                - !Sub arn:aws:s3:::${S3Bucket}/*
-              Sid: WhitelistedPut
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+            Sid: WhitelistedPut
         Version: 2012-10-17
 
   S3Bucket:
