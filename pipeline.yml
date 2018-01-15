@@ -1,6 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 Description: Python WebService for Dynamic DNS
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -10,12 +11,14 @@ Metadata:
           - ProjectId
   CodeBuildImage: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
   CodeBuildImageOverride: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
+
 Outputs:
   LambdaTrustRole:
     Description: AWS role for AWS Lambda used for passRole to Lambda functions.
     Export:
       Name: !Sub ${ProjectId}-${AWS::Region}-LambdaTrustRole
     Value: !GetAtt LambdaTrustRole.Arn
+
 Parameters:
   AppName:
     Description: Name of the application.
