@@ -311,7 +311,17 @@ Resources:
                 ActionMode: CHANGE_SET_REPLACE
                 Capabilities: CAPABILITY_IAM
                 ChangeSetName: pipeline-changeset
-                ParameterOverrides: !Sub '{"ProjectId": "${ProjectId}"}'
+                ParameterOverrides: !Sub |
+                  '{"ProjectId": "${ProjectId}",
+                    "AppName": "${AppName}",
+                    "ProjectId": "${ProjectId}",
+                    "RepositoryBranch": "${RepositoryBranch}",
+                    "RepositoryName": "${RepositoryName}",
+                    "RepositoryProvider": "${RepositoryProvider}",
+                    "RepositoryProviderUserId": "${RepositoryProviderUserId}",
+                    "RepositoryProviderUsername": "${RepositoryProviderUsername}",
+                    "RepositoryToken": "${RepositoryToken}",
+                    "RepositoryURL": "${RepositoryURL}"}'
                 RoleArn: !GetAtt CloudFormationTrustRole.Arn
                 StackName: !Sub ${ProjectId}-lambda
                 TemplatePath: !Sub ${ProjectId}-BuildArtifact::template-export.yml
