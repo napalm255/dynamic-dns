@@ -1,94 +1,356 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Transform:
-  - AWS::Serverless-2016-10-31
-  - AWS::CodeStar
-
+Description: Python WebService for Dynamic DNS
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Application
+        Parameters:
+          - ProjectId
+  CodeBuildImage: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
+  CodeBuildImageOverride: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
+Outputs:
+  LambdaTrustRole:
+    Description: AWS role for AWS Lambda used for passRole to Lambda functions.
+    Export:
+      Name: !Sub ${ProjectId}-${AWS::Region}-LambdaTrustRole
+    Value: !GetAtt 'LambdaTrustRole.Arn'
 Parameters:
+  AppName:
+    Description: Name of the application.
+    MaxLength: 100
+    MinLength: 1
+    Type: String
   ProjectId:
+    AllowedPattern: ^[a-z]([a-z0-9-])+$
+    ConstraintDescription: Project IDs must be between 2 and 15 characters, begin with a letter, and only contain lowercase letters, numbers, and hyphens (-).
+    Description: Project ID.
+    MaxLength: 15
+    MinLength: 2
     Type: String
-    Description: CodeStar projectId used to associate new resources to team members
-  apiHost:
+  RepositoryBranch:
+    Default: master
+    Description: GitHub branch name.
     Type: String
-    Description: Api Gateway Host
-  apiBasePath:
+  RepositoryName:
+    Description: GitHub repository name.
+    MaxLength: 100
+    MinLength: 1
     Type: String
-    Description: Api Gateway Base Path
-
+  RepositoryProvider:
+    Default: GitHub
+    Description: Repository provider.
+    Type: String
+  RepositoryProviderUserId:
+    Description: GitHub user ID.
+    Type: String
+  RepositoryProviderUsername:
+    Description: GitHub user name.
+    Type: String
+  RepositoryToken:
+    Description: GitHub access token.
+    NoEcho: true
+    Type: String
+  RepositoryURL:
+    Description: GitHub repository URL.
+    Type: String
 Resources:
-  DynamicDnsLambda:
-    Type: AWS::Serverless::Function
+  CloudFormationTrustRole:
+    Type: AWS::IAM::Role
+    Description: Creating service role in IAM for AWS CloudFormation
     Properties:
-      Description: Dynamic DNS
-      Handler: index.handler
-      Runtime: python3.6
-      CodeUri: ./
-      Timeout: 15
+      RoleName: !Sub ${ProjectId}-CloudFormationTrustRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+      Path: /
       Policies:
-        - AWSLambdaBasicExecutionRole
-        - AmazonSSMReadOnlyAccess
-        - AmazonRoute53FullAccess
-        - AmazonAPIGatewayAdministrator
-          #      Events:
-          #        PostEvent:
-          #          Type: Api
-          #          Properties:
-          #            Path: /
-          #            Method: post
-          #            RestApiId: !Ref DynamicDnsApi
-
-  DynamicDnsApi:
-    Type: AWS::Serverless::Api
+        - PolicyName: !Sub ${ProjectId}-CloudFormationTrustRolePolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:GetObjectVersion'
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:s3:::${S3Bucket}
+                  - !Sub arn:aws:s3:::${S3Bucket}/*
+              - Action:
+                  - 'lambda:CreateFunction'
+                  - 'lambda:DeleteFunction'
+                  - 'lambda:AddPermission'
+                  - 'lambda:UpdateFunction'
+                  - 'lambda:UpdateFunctionCode'
+                  - 'lambda:GetFunction'
+                  - 'lambda:GetFunctionConfiguration'
+                  - 'lambda:UpdateFunctionConfiguration'
+                  - 'lambda:RemovePermission'
+                  - 'apigateway:*'
+                  - 's3:CreateBucket'
+                  - 's3:DeleteBucket'
+                  - 'config:DescribeConfigRules'
+                  - 'config:PutConfigRule'
+                  - 'config:DeleteConfigRule'
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - 'iam:PassRole'
+                Effect: Allow
+                Resource:
+                  - !GetAtt LambdaTrustRole.Arn
+              - Action:
+                  - 'cloudformation:CreateChangeSet'
+                Effect: Allow
+                Resource:
+                  - 'arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31'
+                  - 'arn:aws:cloudformation:us-east-1:aws:transform/CodeStar'
+  LambdaTrustRole:
+    Type: AWS::IAM::Role
+    Description: Creating service role in IAM for AWS Lambda
     Properties:
-      StageName: Prod
-      DefinitionBody:
-        swagger: "2.0"
-        info:
-          version: "1.0"
-          title: awscodestar-ddns-lambda
-        host: !Ref apiHost
-        basePath: !Sub "/${apiBasePath}"
-        schemes:
-          - "https"
-        paths:
-          /:
-            post:
-              responses: {}
-              security:
-                - api_key: []
-              x-amazon-apigateway-integration:
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DynamicDnsLambda.Arn}/invocations"
-                passthroughBehavior: "when_no_match"
-                httpMethod: "POST"
-                type: "aws_proxy"
-        securityDefinitions:
-          api_key:
-            type: "apiKey"
-            name: "x-api-key"
-            in: "header"
-    DependsOn: DynamicDnsLambda
+      RoleName: !Sub ${ProjectId}-LambdaTrustRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole'
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${ProjectId}-LambdaTrustRolePolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Effect: Allow
+                Resource: '*'
+            Version: 2012-10-17
 
-  DynamicDnsMapping:
-    Type: AWS::ApiGateway::BasePathMapping
+  # CODE BUILD
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Description: Creating service role in IAM for Amazon EC2 instances
     Properties:
-      BasePath: !Ref apiBasePath
-      DomainName: !Ref apiHost
-      RestApiId: !Ref DynamicDnsApi
-      Stage: Prod
-    DependsOn: DynamicDnsApi
+      RoleName: !Sub ${ProjectId}-CodeBuildRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+      Path: /
 
-  DynamicDnsUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    DependsOn:
+      - CodeBuildRole
     Properties:
-      UsagePlanName: ddns
-      ApiStages:
-        - ApiId: !Ref DynamicDnsApi
-          Stage: Prod
-      Description: Dynamic DNS Usage Plan
-      Quota:
-        Limit: 500
-        Period: DAY
-      Throttle:
-        BurstLimit: 20
-        RateLimit: 10
-    DependsOn: DynamicDnsApi
+      Artifacts:
+        Packaging: zip
+        Type: codepipeline
+      Description: !Sub CodeBuild Project for ${AppName}
+      Environment:
+        ComputeType: small
+        EnvironmentVariables:
+          - Name: S3_BUCKET
+            Value: !Ref 'S3Bucket'
+        Image: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
+        Type: container
+      Name: !Ref 'ProjectId'
+      ServiceRole: !Ref 'CodeBuildRole'
+      Source:
+        Type: codepipeline
+
+  # CODE PIPELINE
+  CodePipelineTrustRole:
+    Type: AWS::IAM::Role
+    Description: Creating service role in IAM for AWS CodePipeline
+    Properties:
+      RoleName: !Sub ${ProjectId}-CodePipelineTrustRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+              Sid: 1
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${ProjectId}-CodePipelineTrustRolePolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:GetObject'
+                  - 's3:GetObjectVersion'
+                  - 's3:GetBucketVersioning'
+                  - 's3:PutObject'
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:s3:::${S3Bucket}
+                  - !Sub arn:aws:s3:::${S3Bucket}/*
+              - Action:
+                  - 'codebuild:StartBuild'
+                  - 'codebuild:BatchGetBuilds'
+                  - 'codebuild:StopBuild'
+                Effect: Allow
+                Resource:
+                  - !GetAtt 'CodeBuildProject.Arn'
+              - Action:
+                  - 'cloudformation:DescribeStacks'
+                  - 'cloudformation:DescribeChangeSet'
+                  - 'cloudformation:CreateChangeSet'
+                  - 'cloudformation:DeleteChangeSet'
+                  - 'cloudformation:ExecuteChangeSet'
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:cloudformation:${AWS::Region}-${AWS::AccountId}
+                  - !Sub stack/${ProjectId}-lambda/*
+              - Action:
+                  - 'iam:PassRole'
+                Effect: Allow
+                Resource:
+                  - !GetAtt [CloudFormationTrustRole, Arn]
+  ProjectPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Description: Creating a deployment pipeline for your project in AWS CodePipeline
+    DependsOn:
+      - CloudFormationTrustRole
+      - LambdaTrustRole
+      - CodeBuildProject
+      - CodePipelineTrustRole
+      - S3Bucket
+    Properties:
+      ArtifactStore:
+        Location: !Ref 'S3Bucket'
+        Type: S3
+      Name: !Sub ${ProjectId}-Pipeline
+      RoleArn: !GetAtt CodePipelineTrustRole.Arn
+      Stages:
+        - Actions:
+            - ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: 1
+              Configuration:
+                Branch: !Ref 'RepositoryBranch'
+                OAuthToken: !Ref 'RepositoryToken'
+                Owner: !Ref 'RepositoryProviderUsername'
+                Repo: !Ref 'RepositoryName'
+              InputArtifacts: []
+              OutputArtifacts:
+                - Name: !Sub ${ProjectId}-SourceArtifact
+              RunOrder: 1
+              Name: ApplicationSource
+          Name: Source
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName: !Ref 'ProjectId'
+              InputArtifacts:
+                - Name: !Sub ${ProjectId}-SourceArtifact
+              OutputArtifacts:
+                - Name: !Sub ${ProjectId}-BuildArtifact
+              Name: PackageExport
+              RunOrder: 1
+          Name: Build
+        - Actions:
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                Capabilities: CAPABILITY_IAM
+                ChangeSetName: pipeline-changeset
+                ParameterOverrides: !Sub '{"ProjectId": "${ProjectId}"}'
+                RoleArn: !GetAtt CloudFormationTrustRole.Arn
+                StackName: !Sub ${ProjectId}-lambda
+                TemplatePath: !Sub ${ProjectId}-BuildArtifact::template-export.yml
+              InputArtifacts:
+                - Name: !Sub ${ProjectId}-BuildArtifact
+              Name: GenerateChangeSet
+              OutputArtifacts: []
+              RunOrder: 1
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: pipeline-changeset
+                StackName: !Sub ${ProjectId}-lambda
+              InputArtifacts: []
+              Name: ExecuteChangeSet
+              OutputArtifacts: []
+              RunOrder: 2
+          Name: Deploy
+
+  S3ArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Description: Setting Amazon S3 bucket policy for AWS CodePipeline access
+    Properties:
+      Bucket: !Ref 'S3Bucket'
+      PolicyDocument:
+        Id: SSEAndSSLPolicy
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:GetObjectVersion'
+              - 's3:GetBucketVersioning'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+              Effect: Allow
+              Principal:
+                AWS:
+                  - !GetAtt CodePipelineTrustRole.Arn
+                  - !GetAtt CodeBuildRole.Arn
+                  - !GetAtt CloudFormationTrustRole.Arn
+                Resource:
+                  - !Sub arn:aws:s3:::${S3Bucket}
+                  - !Sub arn:aws:s3:::${S3Bucket}/*
+                Sid: WhitelistedGet
+          - Action:
+              - 's3:PutObject'
+            Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt CodePipelineTrustRole.Arn
+                - !GetAtt CodeBuildRole.Arn
+              Resource:
+                - !Sub arn:aws:s3:::${S3Bucket}
+                - !Sub arn:aws:s3:::${S3Bucket}/*
+              Sid: WhitelistedPut
+        Version: 2012-10-17
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Description: Creating Amazon S3 bucket for AWS CodePipeline artifacts
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub ${ProjectId}-${AWS::Region}-${AWS::AccountId}-pipe
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectId}-S3Bucket
+      VersioningConfiguration:
+        Status: Enabled
