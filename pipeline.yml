@@ -15,7 +15,7 @@ Outputs:
     Description: AWS role for AWS Lambda used for passRole to Lambda functions.
     Export:
       Name: !Sub ${ProjectId}-${AWS::Region}-LambdaTrustRole
-      Value: !GetAtt 'LambdaTrustRole.Arn'
+    Value: !GetAtt LambdaTrustRole.Arn
 Parameters:
   AppName:
     Description: Name of the application.
