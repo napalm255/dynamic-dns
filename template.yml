@@ -73,9 +73,6 @@ Resources:
     Type: AWS::ApiGateway::UsagePlan
     Properties:
       UsagePlanName: ddns
-      ApiStages:
-        - ApiId: !Join ['', [!Ref ApiGateway]]
-          Stage: Prod
       Description: !Sub ${AppName} Usage Plan
       Quota:
         Limit: 500
