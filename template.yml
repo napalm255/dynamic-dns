@@ -71,7 +71,7 @@ Resources:
 
   ApiGatewayMapping:
     Type: AWS::ApiGateway::BasePathMapping
-    DependsOn: !Sub ${ApiGateway}Prod
+    DependsOn: ApiGatewayProdStage
     Properties:
       BasePath: !Ref apiBasePath
       DomainName: !Ref apiHost
@@ -80,7 +80,7 @@ Resources:
 
   ApiGatewayUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn: !Sub ${ApiGateway}Prod
+    DependsOn: ApiGatewayProdStage
     Properties:
       UsagePlanName: ddns
       ApiStages:
