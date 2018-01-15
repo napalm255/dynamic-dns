@@ -377,7 +377,7 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Description: Creating Amazon S3 bucket for AWS CodePipeline artifacts
-    DeletionPolicy: Retain
+    # DeletionPolicy: Retain
     Properties:
       BucketName: !Sub ${ProjectId}-${AWS::Region}-${AWS::AccountId}-pipe
       Tags:
