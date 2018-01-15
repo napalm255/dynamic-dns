@@ -138,7 +138,39 @@ Resources:
                 Resource: '*'
             Version: 2012-10-17
 
-  # CODE BUILD
+  CodeBuildPolicy:
+    Type: AWS::IAM::Policy
+    Description: Setting IAM policy for service role for Amazon EC2 instances
+    DependsOn:
+      - CodeBuildRole
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Effect: Allow
+            Resource: '*'
+          - Action:
+              - 's3:PutObject'
+              - 's3:GetObject'
+              - 's3:GetObjectVersion'
+            Effect: Allow
+            Resource:
+              - !Join ['', ['arn:aws:s3:::', !Ref 'S3Bucket']]
+              - !Join ['', ['arn:aws:s3:::', !Ref 'S3Bucket', /*]]
+          - Action:
+              - 'kms:GenerateDataKey*'
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+            Effect: Allow
+            Resource:
+              - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3
+      PolicyName: ${ProjectId}-CodeBuildPolicy
+      Roles:
+        - !Ref 'CodeBuildRole'
+
   CodeBuildRole:
     Type: AWS::IAM::Role
     Description: Creating service role in IAM for Amazon EC2 instances
@@ -173,7 +205,6 @@ Resources:
       Source:
         Type: codepipeline
 
-  # CODE PIPELINE
   CodePipelineTrustRole:
     Type: AWS::IAM::Role
     Description: Creating service role in IAM for AWS CodePipeline
