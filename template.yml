@@ -2,7 +2,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform:
   - AWS::Serverless-2016-10-31
-  - AWS::CodeStar
 
 Parameters:
   ProjectId:
@@ -19,7 +18,8 @@ Resources:
   DynamicDnsLambda:
     Type: AWS::Serverless::Function
     Properties:
-      Description: Dynamic DNS
+      FunctionName: !Sub ${ProjectId}-lambda
+      Description: !Sub ${ProjectId} Lambda Function
       Handler: index.handler
       Runtime: python3.6
       CodeUri: ./
@@ -40,7 +40,7 @@ Resources:
         swagger: "2.0"
         info:
           version: "1.0"
-          title: awscodestar-ddns-lambda
+          title: !Sub ${ProjectId}-api
         host: !Ref apiHost
         basePath: !Sub "/${apiBasePath}"
         schemes:
@@ -61,30 +61,3 @@ Resources:
             type: "apiKey"
             name: "x-api-key"
             in: "header"
-
-  DynamicDnsMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    DependsOn:
-      - DynamicDnsApi
-    Properties:
-      BasePath: !Ref apiBasePath
-      DomainName: !Ref apiHost
-      RestApiId: !Ref DynamicDnsApi
-      Stage: Prod
-
-  DynamicDnsUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    DependsOn:
-      - DynamicDnsApi
-    Properties:
-      UsagePlanName: ddns
-      ApiStages:
-        - ApiId: !Ref DynamicDnsApi
-          Stage: Prod
-      Description: Dynamic DNS Usage Plan
-      Quota:
-        Limit: 500
-        Period: DAY
-      Throttle:
-        BurstLimit: 20
-        RateLimit: 10
