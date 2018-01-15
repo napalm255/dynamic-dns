@@ -12,13 +12,6 @@ Metadata:
   CodeBuildImage: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
   CodeBuildImageOverride: aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6
 
-Outputs:
-  LambdaTrustRole:
-    Description: AWS role for AWS Lambda used for passRole to Lambda functions.
-    Export:
-      Name: !Sub ${ProjectId}-${AWS::Region}-LambdaTrustRole
-    Value: !GetAtt LambdaTrustRole.Arn
-
 Parameters:
   AppName:
     Description: Name of the application.
@@ -111,46 +104,10 @@ Resources:
                 Effect: Allow
                 Resource: '*'
               - Action:
-                  - 'iam:PassRole'
-                Effect: Allow
-                Resource:
-                  - !GetAtt LambdaTrustRole.Arn
-              - Action:
                   - 'cloudformation:CreateChangeSet'
                 Effect: Allow
                 Resource:
                   - 'arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31'
-  LambdaTrustRole:
-    Type: AWS::IAM::Role
-    Description: Creating service role in IAM for AWS Lambda
-    Properties:
-      RoleName: !Sub ${ProjectId}-LambdaTrustRole
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-        - 'arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole'
-        # TODO: limit access
-        - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
-        - 'arn:aws:iam::aws:policy/AmazonRoute53FullAccess'
-        - 'arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator'
-      Path: /
-      Policies:
-        - PolicyName: !Sub ${ProjectId}-LambdaTrustRolePolicy
-          PolicyDocument:
-            Statement:
-              - Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Effect: Allow
-                Resource: '*'
-            Version: 2012-10-17
 
   CodeBuildPolicy:
     Type: AWS::IAM::Policy
@@ -272,7 +229,6 @@ Resources:
     Description: Creating a deployment pipeline for your project in AWS CodePipeline
     DependsOn:
       - CloudFormationTrustRole
-      - LambdaTrustRole
       - CodeBuildProject
       - CodePipelineTrustRole
       - S3Bucket
