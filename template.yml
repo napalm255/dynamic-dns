@@ -238,7 +238,7 @@ Resources:
                   - 'codebuild:StopBuild'
                 Effect: Allow
                 Resource:
-                  - !GetAtt 'CodeBuildProject.Arn'
+                  - !GetAtt CodeBuildProject.Arn
               - Action:
                   - 'cloudformation:DescribeStacks'
                   - 'cloudformation:DescribeChangeSet'
@@ -247,13 +247,12 @@ Resources:
                   - 'cloudformation:ExecuteChangeSet'
                 Effect: Allow
                 Resource:
-                  - !Sub arn:aws:cloudformation:${AWS::Region}-${AWS::AccountId}
-                  - !Sub stack/${ProjectId}-lambda/*
+                  - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ProjectId}-lambda/*
               - Action:
                   - 'iam:PassRole'
                 Effect: Allow
                 Resource:
-                  - !GetAtt [CloudFormationTrustRole, Arn]
+                  - !GetAtt CloudFormationTrustRole.Arn
   ProjectPipeline:
     Type: AWS::CodePipeline::Pipeline
     Description: Creating a deployment pipeline for your project in AWS CodePipeline
