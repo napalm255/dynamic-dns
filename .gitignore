@@ -2,3 +2,4 @@
 *.pyc
 play.yml
 *.retry
+template-export.yml
