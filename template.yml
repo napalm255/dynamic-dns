@@ -29,16 +29,11 @@ Resources:
         - AmazonSSMReadOnlyAccess
         - AmazonRoute53FullAccess
         - AmazonAPIGatewayAdministrator
-      Events:
-        PostEvent:
-          Type: Api
-          Properties:
-            Path: /
-            Method: post
-            RestApiId: !Ref DynamicDnsApi
 
   DynamicDnsApi:
     Type: AWS::Serverless::Api
+    DependsOn:
+      - DynamicDnsLambda
     Properties:
       StageName: Prod
       DefinitionBody:
@@ -66,19 +61,21 @@ Resources:
             type: "apiKey"
             name: "x-api-key"
             in: "header"
-    DependsOn: DynamicDnsLambda
 
   DynamicDnsMapping:
     Type: AWS::ApiGateway::BasePathMapping
+    DependsOn:
+      - DynamicDnsApi
     Properties:
       BasePath: !Ref apiBasePath
       DomainName: !Ref apiHost
       RestApiId: !Ref DynamicDnsApi
       Stage: Prod
-    DependsOn: DynamicDnsApi
 
   DynamicDnsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - DynamicDnsApi
     Properties:
       UsagePlanName: ddns
       ApiStages:
@@ -91,4 +88,3 @@ Resources:
       Throttle:
         BurstLimit: 20
         RateLimit: 10
-    DependsOn: DynamicDnsApi
