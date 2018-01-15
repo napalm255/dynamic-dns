@@ -71,11 +71,10 @@ Resources:
 
   ApiGatewayUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn: ApiGatewayProdStage
     Properties:
       UsagePlanName: ddns
       ApiStages:
-        - ApiId: !Ref ApiGateway
+        - ApiId: !Sub arn:aws:apigateway:${AWS::Region}::${ApiGateway}:/Prod
           Stage: Prod
       Description: !Sub ${AppName} Usage Plan
       Quota:
