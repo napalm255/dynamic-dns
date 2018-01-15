@@ -16,7 +16,7 @@ Parameters:
     Description: Api Gateway Base Path
 
 Resources:
-  DynamicDnsLambda:
+  LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${ProjectId}-lambda
@@ -30,11 +30,18 @@ Resources:
         - AmazonSSMReadOnlyAccess
         - AmazonRoute53FullAccess
         - AmazonAPIGatewayAdministrator
+      Events:
+        PostEvent:
+          Type: Api
+          Properties:
+            Path: /
+            Method: post
+            RestApiId: !Ref ApiGateway
 
-  DynamicDnsApi:
+  ApiGateway:
     Type: AWS::Serverless::Api
     DependsOn:
-      - DynamicDnsLambda
+      - LambdaFunction
     Properties:
       StageName: Prod
       DefinitionBody:
@@ -53,7 +60,7 @@ Resources:
               security:
                 - api_key: []
               x-amazon-apigateway-integration:
-                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DynamicDnsLambda.Arn}/invocations"
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations"
                 passthroughBehavior: "when_no_match"
                 httpMethod: "POST"
                 type: "aws_proxy"
