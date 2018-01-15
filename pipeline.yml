@@ -399,4 +399,4 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectId}-S3Bucket
       VersioningConfiguration:
-        Status: Enabled
+        Status: Disabled
