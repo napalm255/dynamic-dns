@@ -104,6 +104,11 @@ Resources:
                 Effect: Allow
                 Resource: '*'
               - Action:
+                  - 'iam:PassRole'
+                Effect: Allow
+                Resource:
+                  - arn:aws:iam:*
+              - Action:
                   - 'cloudformation:CreateChangeSet'
                 Effect: Allow
                 Resource:
