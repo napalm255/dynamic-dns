@@ -74,7 +74,7 @@ Resources:
     Properties:
       UsagePlanName: ddns
       ApiStages:
-        - ApiId: !Sub arn:aws:apigateway:${AWS::Region}::${ApiGateway}:/Prod
+        - ApiId: !Sub arn:aws:apigateway:${AWS::Region}::${ProjectId}-api:/Prod
           Stage: Prod
       Description: !Sub ${AppName} Usage Plan
       Quota:
