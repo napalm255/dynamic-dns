@@ -102,6 +102,7 @@ Resources:
                   - 'lambda:UpdateFunctionConfiguration'
                   - 'lambda:RemovePermission'
                   - 'apigateway:*'
+                  - 'iam:*'
                   - 's3:CreateBucket'
                   - 's3:DeleteBucket'
                   - 'config:DescribeConfigRules'
