@@ -69,20 +69,20 @@ Resources:
             name: "x-api-key"
             in: "header"
 
-#  ApiGatewayUsagePlan:
-#    Type: AWS::ApiGateway::UsagePlan
-#    Properties:
-#      UsagePlanName: ddns
-#      ApiStages:
-#        - ApiId: !Sub arn:aws:apigateway:${AWS::Region}::${ProjectId}-api:/Prod
-#          Stage: Prod
-#      Description: !Sub ${AppName} Usage Plan
-#      Quota:
-#        Limit: 500
-#        Period: DAY
-#      Throttle:
-#        BurstLimit: 20
-#        RateLimit: 10
+  ApiGatewayUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: ddns
+      ApiStages:
+        - ApiId: !Join ['' [!Ref ApiGateway]]
+          Stage: Prod
+      Description: !Sub ${AppName} Usage Plan
+      Quota:
+        Limit: 500
+        Period: DAY
+      Throttle:
+        BurstLimit: 20
+        RateLimit: 10
 #
 #  ApiGatewayMapping:
 #    Type: AWS::ApiGateway::BasePathMapping
