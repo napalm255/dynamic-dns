@@ -71,6 +71,7 @@ Resources:
 
   ApiGatewayUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
+    DependsOn: ApiGatewayProdStage
     Properties:
       UsagePlanName: ddns
       ApiStages:
