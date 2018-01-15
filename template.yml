@@ -217,7 +217,7 @@ Resources:
             Principal:
               Service:
                 - codepipeline.amazonaws.com
-              Sid: 1
+            Sid: 1
       Path: /
       Policies:
         - PolicyName: !Sub ${ProjectId}-CodePipelineTrustRolePolicy
