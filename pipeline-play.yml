@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+
+  tasks:
+    - name: launch cloudformation template
+      cloudformation:
+        template: pipeline.yml
+        stack_name: dynamic-dns
+        state: "{{ state | default('present') }}"
+        region: us-east-1
+        disable_rollback: false
+        template_parameters:
+          AppName: dynamic-dns
+          ProjectId: dynamic-dns
+          RepositoryBranch: master
+          RepositoryName: dynamic-dns
+          RepositoryProvider: GitHub
+          RepositoryProviderUserId: 000000 # REPLACE ME
+          RepositoryProviderUsername: username # REPLACE ME
+          RepositoryToken: 0000000000000000000000000000000000000000 # REPLACE ME
+          RepositoryURL: https://github.com/username/dynamic-dns
+          apiHost: api.somedomain.com
+          apiBasePath: ddns
+        tags:
+          Stack: "dynamic-dns"
