@@ -85,6 +85,7 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     DependsOn:
       - ApiGateway
+      - LambdaFunction
     Properties:
       BasePath: !Ref apiBasePath
       DomainName: !Ref apiHost
