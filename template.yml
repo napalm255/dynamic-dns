@@ -85,7 +85,7 @@ Resources:
         RateLimit: 10
       ApiStages:
         - ApiId: !Ref ApiGateway
-          State: Prod
+          Stage: Prod
 
   ApiGatewayMapping:
     Type: AWS::ApiGateway::BasePathMapping
