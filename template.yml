@@ -16,18 +16,6 @@ Parameters:
     Description: Api Gateway Base Path
 
 Resources:
-  ApiGatewayUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Properties:
-      UsagePlanName: !Ref ProjectId
-      Description: !Sub ${ProjectId} usage plan
-      Quota:
-        Limit: 500
-        Period: DAY
-      Throttle:
-        BurstLimit: 20
-        RateLimit: 10
-
   LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -79,6 +67,25 @@ Resources:
             type: "apiKey"
             name: "x-api-key"
             in: "header"
+
+  ApiGatewayUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ApiGateway
+      - ApiGatewayProdStage
+      - LambdaFunction
+    Properties:
+      UsagePlanName: !Ref ProjectId
+      Description: !Sub ${ProjectId} usage plan
+      Quota:
+        Limit: 500
+        Period: DAY
+      Throttle:
+        BurstLimit: 20
+        RateLimit: 10
+      ApiStages:
+        ApiId: !Ref ApiGateway
+        State: Prod
 
   ApiGatewayMapping:
     Type: AWS::ApiGateway::BasePathMapping
