@@ -52,7 +52,6 @@ Resources:
 
   ApiGateway:
     Type: AWS::Serverless::Api
-    DependsOn: LambdaFunction
     Properties:
       StageName: Prod
       DefinitionBody:
@@ -83,9 +82,10 @@ Resources:
 
   ApiGatewayMapping:
     Type: AWS::ApiGateway::BasePathMapping
-    DependsOn: ApiGateway
+    DependsOn:
+      - ApiGateway
     Properties:
       BasePath: !Ref apiBasePath
       DomainName: !Ref apiHost
       RestApiId: !Ref ApiGateway
-      Stage: /Prod
+      Stage: Prod
