@@ -42,6 +42,7 @@ Resources:
         - AmazonSSMReadOnlyAccess
         - AmazonRoute53FullAccess
         - AmazonAPIGatewayAdministrator
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectId}-LambdaTrustRole
       Events:
         PostEvent:
           Type: Api
