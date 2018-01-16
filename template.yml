@@ -15,6 +15,13 @@ Parameters:
     Type: String
     Description: Api Gateway Base Path
 
+Outputs:
+  ApiGatewayDefaultUser:
+    Description: Default User for API Gateway
+    Export:
+      Name: !Sub ${ProjectId}-${AWS::Region}-ApiGatewayDefaultUser
+    Value: !Sub ${ProjectId}-default-user
+
 Resources:
   LambdaFunction:
     Type: AWS::Serverless::Function
@@ -86,6 +93,24 @@ Resources:
       ApiStages:
         - ApiId: !Ref ApiGateway
           Stage: Prod
+
+  ApiGatewayDefaultApiKey:
+    Type: "AWS::ApiGateway::ApiKey"
+    DependsOn:
+      - ApiGatewayUsagePlan
+    Properties:
+      CustomerId: !Sub ${ProjectId}-default-user
+      Description: bMmAe46ekBfZ2E4h
+      Enabled: true
+
+  ApiGatewayDefaultUsagePlanKey:
+    Type: "AWS::ApiGateway::UsagePlanKey"
+    DependsOn:
+      - ApiGatewayDefaultApiKey
+    Properties:
+      KeyId: !Ref ApiGatewayDefaultApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiGatewayUsagePlan
 
   ApiGatewayMapping:
     Type: AWS::ApiGateway::BasePathMapping
