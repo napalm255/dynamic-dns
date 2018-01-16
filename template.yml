@@ -84,8 +84,8 @@ Resources:
         BurstLimit: 20
         RateLimit: 10
       ApiStages:
-        ApiId: !Ref ApiGateway
-        State: Prod
+        - ApiId: !Ref ApiGateway
+          State: Prod
 
   ApiGatewayMapping:
     Type: AWS::ApiGateway::BasePathMapping
