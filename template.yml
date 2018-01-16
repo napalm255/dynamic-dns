@@ -84,8 +84,8 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     DependsOn:
       - ApiGateway
+      - ApiGatewayProdStage
       - LambdaFunction
-      - LambdaFunctionPostEventPermissionProd
     Properties:
       BasePath: !Ref apiBasePath
       DomainName: !Ref apiHost
