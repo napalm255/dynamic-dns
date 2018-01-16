@@ -71,8 +71,8 @@ Resources:
   ApiGatewayUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
     Properties:
-      UsagePlanName: ddns
-      Description: !Sub ${AppName} Usage Plan
+      UsagePlanName: !Ref ProjectId
+      Description: !Sub ${ProjectId} usage plan
       Quota:
         Limit: 500
         Period: DAY
