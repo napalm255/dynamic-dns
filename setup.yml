@@ -4,18 +4,32 @@
   connection: local
 
   vars:
-    application_name: dynamic-dns
     project_id: dynamic-dns
 
-    github_userid: 000000
-    github_username: username
-    github_token: 0000000000000000000000000000000000000000
-    github_repo_name: dynamic-dns
-    github_repo_url: https://github.com/{{ github_username }}/{{ github_repo_name }}
-    github_repo_branch: master
-
-    api_hostname: api.dynamic-dns.net
-    api_basepath: ddns
+  vars_prompt:
+    - name: github_userid
+      prompt: GitHub UserId
+      private: false
+    - name: github_username
+      prompt: GitHub Username
+      private: false
+    - name: github_token
+      prompt: GitHub OAUTH Token
+      private: false
+    - name: github_repo_name
+      prompt: GitHub Repository Name
+      private: false
+    - name: github_repo_branch
+      prompt: GitHub Repository Branch
+      private: false
+      default: master
+    - name: api_hostname
+      prompt: API Hostname (ex. api.domain.com)
+      private: false
+    - name: api_basepath
+      prompt: API Base Path (ex. ddns)
+      private: false
+      default: ddns
 
   tasks:
     - name: deploy cloudformation template
@@ -23,18 +37,13 @@
         template: pipeline.yml
         stack_name: "{{ project_id }}"
         state: "{{ state | default('present') }}"
-        region: "{{ aws_region | default('us-east-1') }}"
         disable_rollback: false
         template_parameters:
-          AppName: "{{ application_name }}"
-          ProjectId: "{{ project_id }}"
           RepositoryBranch: "{{ github_repo_branch }}"
           RepositoryName: "{{ github_repo_name }}"
-          RepositoryProvider: GitHub
           RepositoryProviderUserId: "{{ github_userid }}"
           RepositoryProviderUsername: "{{ github_username }}"
           RepositoryToken: "{{ github_token }}"
-          RepositoryURL: "{{ github_repo_url }}"
           apiHost: "{{ api_hostname }}"
           apiBasePath: "{{ api_basepath }}"
         tags:
