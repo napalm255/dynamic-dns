@@ -99,7 +99,7 @@ Resources:
     DependsOn:
       - ApiGatewayUsagePlan
     Properties:
-      CustomerId: !Sub ${ProjectId}-default-user
+      Name: !Sub ${ProjectId}-default-user
       Description: bMmAe46ekBfZ2E4h
       Enabled: true
 
