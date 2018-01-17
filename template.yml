@@ -97,7 +97,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Api-Key'"
                       method.response.header.Access-Control-Allow-Methods: "'POST, OPTIONS'"
-                      method.response.header.Access-Control-Allow-Origin: !Sub "'${apiHost}'"
+                      method.response.header.Access-Control-Allow-Origin: !Sub "'https://${apiHost}'"
                     responseTemplates:
                       application/json: |
                         {}
