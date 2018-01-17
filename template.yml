@@ -17,7 +17,7 @@ Parameters:
 
 Outputs:
   ApiGatewayDefaultUser:
-    Description: Default User for API Gateway
+    Description: Api Gateway Default User
     Export:
       Name: !Sub ${ProjectId}-${AWS::Region}-ApiGatewayDefaultUser
     Value: !Sub ${ProjectId}-default-user

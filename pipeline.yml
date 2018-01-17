@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: Python WebService for Dynamic DNS
+Description: Python Webservice for Dynamic DNS
 
 Metadata:
   AWS::CloudFormation::Interface:
