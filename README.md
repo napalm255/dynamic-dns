@@ -17,7 +17,8 @@ This project can be used as a self hosted dynamic dns solution using amazon web 
 
 The setup process uses ansible to deploy the initial cloudformation template.
 
-```pip install -r requirements_setup.txt
+```
+pip install -r requirements_setup.txt
 ansible-playbook setup.yml
 ```
 
