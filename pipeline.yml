@@ -25,6 +25,7 @@ Parameters:
     MaxLength: 100
     MinLength: 1
     Type: String
+    Default: dynamic-dns
   ProjectId:
     AllowedPattern: ^[a-z]([a-z0-9-])+$
     ConstraintDescription: Project IDs must be between 2 and 15 characters, begin with a letter, and only contain lowercase letters, numbers, and hyphens (-).
@@ -32,19 +33,21 @@ Parameters:
     MaxLength: 15
     MinLength: 2
     Type: String
+    Default: dynamic-dns
   RepositoryBranch:
     Default: master
     Description: GitHub branch name.
     Type: String
+    Default: master
   RepositoryName:
     Description: GitHub repository name.
     MaxLength: 100
     MinLength: 1
     Type: String
   RepositoryProvider:
-    Default: GitHub
     Description: Repository provider.
     Type: String
+    Default: GitHub
   RepositoryProviderUserId:
     Description: GitHub user ID.
     Type: String
@@ -54,9 +57,6 @@ Parameters:
   RepositoryToken:
     Description: GitHub access token.
     NoEcho: true
-    Type: String
-  RepositoryURL:
-    Description: GitHub repository URL.
     Type: String
   apiHost:
     Type: String
