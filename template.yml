@@ -102,7 +102,7 @@ Resources:
                       application/json: |
                         {}
               responses:
-                200:
+                '200':
                   description: Default response for CORS method
                   headers:
                     Access-Control-Allow-Headers:
