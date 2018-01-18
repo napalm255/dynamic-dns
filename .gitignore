@@ -3,3 +3,4 @@
 play.yml
 *.retry
 template-export.yml
+setup.sh
