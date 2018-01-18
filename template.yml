@@ -14,6 +14,12 @@ Parameters:
   apiBasePath:
     Type: String
     Description: Api Gateway Base Path
+  ddnsConfigDomain:
+    Type: String
+    Description: Dynamic DNS Config Domain
+  ddnsConfigHostedZoneId:
+    Type: String
+    Description: Dynamic DNS Config Hosted Zone Id
 
 Outputs:
   ApiGatewayDefaultUser:
@@ -23,6 +29,22 @@ Outputs:
     Value: !Sub ${ProjectId}-default-user
 
 Resources:
+  SsmParameterConfigDomain:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: /ddns/config/domain
+      Description: !Sub ${ProjectId} config domain
+      Type: String
+      Value: !Ref ddnsConfigDomain
+
+  SsmParameterConfigHostedZoneId:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: /ddns/config/hosted_zone_id
+      Description: !Sub ${ProjectId} config hosted zone id
+      Type: String
+      Value: !Ref ddnsConfigHostedZoneId
+
   LambdaFunction:
     Type: AWS::Serverless::Function
     Properties:

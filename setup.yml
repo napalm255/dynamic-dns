@@ -30,6 +30,12 @@
       prompt: API Base Path (ex. ddns)
       private: false
       default: ddns
+    - name: ddns_config_domain
+      prompt: Dynamic DNS Domain Name (ex. ddns.domain.com)
+      private: false
+    - name: ddns_config_hostedzoneid
+      prompt: Dynamic DNS Hosted Zone Id (ex. Z00E0ZGIN00X00)
+      private: false
 
   tasks:
     - name: deploy cloudformation template
@@ -46,5 +52,7 @@
           RepositoryToken: "{{ github_token }}"
           apiHost: "{{ api_hostname }}"
           apiBasePath: "{{ api_basepath }}"
+          ddnsConfigDomain: "{{ ddns_config_domain }}"
+          ddnsConfigHostedZoneId: "{{ ddns_config_hostedzoneid }}"
         tags:
           Stack: "{{ project_id }}"

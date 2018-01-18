@@ -38,7 +38,6 @@ Parameters:
     Default: master
     Description: GitHub branch name.
     Type: String
-    Default: master
   RepositoryName:
     Description: GitHub repository name.
     MaxLength: 100
@@ -64,6 +63,12 @@ Parameters:
   apiBasePath:
     Type: String
     Description: Api Gateway Base Path
+  ddnsConfigDomain:
+    Type: String
+    Description: Dynamic DNS Config Domain
+  ddnsConfigHostedZoneId:
+    Type: String
+    Description: Dynamic DNS Config Hosted Zone Id
 
 Resources:
   CloudFormationTrustRole:
@@ -327,7 +332,9 @@ Resources:
                 ParameterOverrides: !Sub |
                   {"ProjectId": "${ProjectId}",
                    "apiHost": "${apiHost}",
-                   "apiBasePath": "${apiBasePath}"}
+                   "apiBasePath": "${apiBasePath}",
+                   "ddnsConfigDomain": "${ddnsConfigDomain}",
+                   "ddnsConfigHostedZoneId": "${ddnsConfigHostedZoneId}"}
                 RoleArn: !GetAtt CloudFormationTrustRole.Arn
                 StackName: !Sub ${ProjectId}-lambda
                 TemplatePath: !Sub ${ProjectId}-BuildArtifact::template-export.yml
