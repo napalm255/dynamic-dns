@@ -406,4 +406,4 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectId}-S3Bucket
       VersioningConfiguration:
-        Status: Suspended
+        Status: Enabled
