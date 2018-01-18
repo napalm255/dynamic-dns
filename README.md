@@ -25,10 +25,9 @@ ansible-playbook setup.yml
 The initial setup will create the pipeline and build process, hook to github and trigger a build.
 By the end you should have a working stack.
 
-### Requirements
+### External Requirements
 
 - AWS Credentials and Config ([Boto3 Config](https://boto3.readthedocs.io/en/latest/guide/configuration.html))
-- SSM Parameter
 - GitHub Repository
 - GitHub OAUTH Token
 - API Gateway Custom Domain
